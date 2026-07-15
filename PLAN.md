@@ -51,9 +51,9 @@
   - 输入清洗：正则过滤常见注入模式（`input_filter.py`）
   - P4 评估是否需要输出检测
 - [ ] 实现速率限制中间件
-  - 全局 QPS 限制（默认 10 QPS）
-  - 按 session 限流（默认 2 QPS）
-  - 按 buyer_nick 日限额（默认 200 次/天）
+  - 全局 QPS 限制：内存计数器，默认 10 QPS
+  - 按 session 限流：内存计数器，默认 2 QPS
+  - 按 buyer_nick 日限额：PG 原子计数 `INSERT ON CONFLICT UPDATE`，默认 200 次/天
   - 超限返回 429 + 友好提示
 - [ ] 实现敏感信息保护
   - 日志脱敏：`buyer_nick` 只截取前两位

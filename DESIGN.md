@@ -105,10 +105,11 @@ Format: 必须返回 JSON
 
 ### 速率限制
 
-- **全局 QPS**：所有请求共享上限（默认 10 QPS），防止 DDoS
-- **按 session 限流**：每个会话独立限制（默认 2 QPS），防止单个用户刷屏
-- **按 buyer_nick 日限额**：每个买家每天最多 200 次对话，防止滥用
+- **全局 QPS**：内存计数器，FastAPI 中间件实现，默认 10 QPS，防 DDoS
+- **按 session 限流**：内存计数器，默认 2 QPS，防止单个用户刷屏
+- **按 buyer_nick 日限额**：PostgreSQL `INSERT ON CONFLICT UPDATE` 原子计数，默认 200 次/天
 - 超限返回 429 + 友好提示
+- 不需要额外引入 Redis，复用现有 PG 基础设施
 
 ### 敏感信息保护
 
