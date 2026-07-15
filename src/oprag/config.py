@@ -42,5 +42,13 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
 
+    # --- 安全 ---
+    api_key: str = ""  # H5 页面携带的 API Key，空表示不启用认证
+
+    # --- 速率限制 ---
+    global_qps: int = 10
+    session_qps: int = 2
+    buyer_daily_limit: int = 200
+
 
 settings = Settings()

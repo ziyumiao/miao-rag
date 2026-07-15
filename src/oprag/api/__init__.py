@@ -5,10 +5,11 @@ from __future__ import annotations
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from oprag.agent.graph import create_agent
+from oprag.api.middleware import ApiKeyMiddleware
 
 
 class ChatRequest(BaseModel):
@@ -26,68 +27,72 @@ class ChatResponse(BaseModel):
     suggestions: list[dict] = Field(default_factory=list)
 
 
-_agent = None
+def create_api(api_key: str = "") -> FastAPI:
+    """工厂函数：创建带安全中间件的 FastAPI 应用"""
 
+    _agent = None
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global _agent
-    _agent = create_agent(use_pg=False)
-    yield
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        nonlocal _agent
+        _agent = create_agent(use_pg=False)
+        app.state.agent = _agent
+        yield
 
-
-app = FastAPI(
-    title="oprag - 售前键帽客服",
-    version="0.1.0",
-    lifespan=lifespan,
-)
-
-
-@app.get("/health")
-async def health():
-    return {"status": "ok", "version": "0.1.0"}
-
-
-@app.post("/qa/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest):
-    if _agent is None:
-        raise HTTPException(status_code=503, detail="服务尚未初始化")
-
-    session_id = req.session_id or str(uuid.uuid4())
-
-    config = {"configurable": {"thread_id": session_id}}
-    state: dict = {
-        "messages": [
-            {"role": "user", "content": req.message},
-        ],
-        "session_id": session_id,
-        "buyer_nick": req.buyer_nick,
-    }
-
-    result = await _agent.ainvoke(state, config)
-
-    final_answer = result.get("final_answer", "抱歉，暂时无法处理您的问题。")
-    escalated = result.get("escalate", False)
-
-    return ChatResponse(
-        session_id=session_id,
-        reply=final_answer,
-        escalated=escalated,
-        compatibility=result.get("compatibility"),
+    app = FastAPI(
+        title="oprag - 售前键帽客服",
+        version="0.1.0",
+        lifespan=lifespan,
     )
 
+    if api_key:
+        app.add_middleware(ApiKeyMiddleware, api_key=api_key)
 
-@app.post("/qa/reset")
-async def reset_session(session_id: str = Query(..., description="会话 ID")):
-    return {"message": "会话已重置", "session_id": session_id}
+    @app.get("/health")
+    async def health():
+        return {"status": "ok", "version": "0.1.0"}
 
+    @app.post("/qa/chat", response_model=ChatResponse)
+    async def chat(req: ChatRequest, request: Request):
+        agent = _agent or getattr(request.app.state, "agent", None)
+        if agent is None:
+            raise HTTPException(status_code=503, detail="服务尚未初始化")
 
-@app.get("/knowledge/stats")
-async def knowledge_stats():
-    return {
-        "documents": 0,
-        "chunks": 0,
-        "entities": 0,
-        "relations": 0,
-        "status": "not_built",
-    }
+        session_id = req.session_id or str(uuid.uuid4())
+
+        config = {"configurable": {"thread_id": session_id}}
+        state: dict = {
+            "messages": [
+                {"role": "user", "content": req.message},
+            ],
+            "session_id": session_id,
+            "buyer_nick": req.buyer_nick,
+        }
+
+        result = await agent.ainvoke(state, config)
+
+        final_answer = result.get("final_answer", "抱歉，暂时无法处理您的问题。")
+        escalated = result.get("escalate", False)
+
+        return ChatResponse(
+            session_id=session_id,
+            reply=final_answer,
+            escalated=escalated,
+            compatibility=result.get("compatibility"),
+        )
+
+    @app.post("/qa/reset")
+    async def reset_session(session_id: str = Query(..., description="会话 ID")):
+        return {"message": "会话已重置", "session_id": session_id}
+
+    @app.get("/knowledge/stats")
+    async def knowledge_stats():
+        return {
+            "documents": 0,
+            "chunks": 0,
+            "entities": 0,
+            "relations": 0,
+            "status": "not_built",
+        }
+
+    return app
