@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from oprag.agent.graph import create_agent
-from oprag.api.middleware import ApiKeyMiddleware
+from oprag.api.middleware import ApiKeyMiddleware, RateLimitMiddleware
 
 
 class ChatRequest(BaseModel):
@@ -61,6 +61,8 @@ def create_api(api_key: str = "") -> FastAPI:
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["X-API-Key", "Content-Type", "Authorization"],
     )
+
+    app.add_middleware(RateLimitMiddleware, session_qps=2)
 
     @app.get("/health")
     async def health():

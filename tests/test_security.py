@@ -120,3 +120,27 @@ class TestCORS:
         )
         assert response.status_code != 200
         assert response.headers.get("access-control-allow-origin") is None
+
+
+class TestRateLimit:
+    def test_rate_limit_header_present(self, client):
+        """限流中间件应在响应中写入 X-RateLimit 头部"""
+        response = client.post(
+            "/qa/chat",
+            json={"message": "测试限流"},
+            headers={"X-API-Key": "test-secret-key"},
+        )
+        assert "X-RateLimit-Limit" in response.headers
+        assert response.headers["X-RateLimit-Limit"] == "2"
+
+    def test_exceed_session_limit_returns_429(self, client):
+        """超出 session 限流时返回 429"""
+        headers = {"X-API-Key": "test-secret-key"}
+        # 发送 3 个请求（限流 2 QPS），第一个请求建立计数
+        responses = []
+        for _ in range(3):
+            responses.append(
+                client.post("/qa/chat", json={"message": "test"}, headers=headers)
+            )
+        # 至少有一个返回 429
+        assert any(r.status_code == 429 for r in responses)
