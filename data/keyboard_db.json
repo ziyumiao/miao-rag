@@ -1,0 +1,212 @@
+[
+  {
+    "brand": "Filco",
+    "model": "Ninja 87",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Filco",
+    "model": "Majestouch 2",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Corsair",
+    "model": "K70",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Corsair",
+    "model": "K95",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Cherry",
+    "model": "MX Board 3.0S",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Cherry",
+    "model": "G80-3000",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Logitech",
+    "model": "G913",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "low_profile"
+  },
+  {
+    "brand": "Logitech",
+    "model": "G915",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "low_profile"
+  },
+  {
+    "brand": "Logitech",
+    "model": "G Pro X",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Razer",
+    "model": "Huntsman",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Razer",
+    "model": "BlackWidow V4",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Leopold",
+    "model": "FC750R",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Leopold",
+    "model": "FC980M",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Varmilo",
+    "model": "VA87M",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Ducky",
+    "model": "One 2",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Ducky",
+    "model": "One 3",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Keychron",
+    "model": "K2",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Keychron",
+    "model": "K8",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Keychron",
+    "model": "Q1",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Akko",
+    "model": "3068",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Akko",
+    "model": "3098",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "HHKB",
+    "model": "Pro 2",
+    "type": "electrostatic",
+    "switch_structure": "non_cross",
+    "switch_height": null
+  },
+  {
+    "brand": "HHKB",
+    "model": "Pro Hybrid",
+    "type": "electrostatic",
+    "switch_structure": "non_cross",
+    "switch_height": null
+  },
+  {
+    "brand": "Realforce",
+    "model": "R2",
+    "type": "electrostatic",
+    "switch_structure": "non_cross",
+    "switch_height": null
+  },
+  {
+    "brand": "NuPhy",
+    "model": "Air75",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "low_profile"
+  },
+  {
+    "brand": "NuPhy",
+    "model": "Halo75",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "MelGeek",
+    "model": "MOJO68",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "iQunix",
+    "model": "F96",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "iQunix",
+    "model": "OG80",
+    "type": "mechanical",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  },
+  {
+    "brand": "Wooting",
+    "model": "60HE",
+    "type": "magnetic",
+    "switch_structure": "cross",
+    "switch_height": "standard"
+  }
+]
