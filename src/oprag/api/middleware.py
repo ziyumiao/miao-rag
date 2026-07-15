@@ -16,6 +16,9 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
         self._api_key = api_key
 
     async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         if request.url.path in EXCLUDED_PATHS:
             return await call_next(request)
 

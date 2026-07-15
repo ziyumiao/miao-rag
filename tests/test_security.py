@@ -80,3 +80,43 @@ class TestInputFilter:
         result = filter_input("海盗船K70能用吗")
         assert "海盗船" in result
         assert "K70" in result
+
+
+class TestCORS:
+    def test_allows_taobao_origin(self, client):
+        """允许来自 *.taobao.com 的跨域请求"""
+        response = client.options(
+            "/qa/chat",
+            headers={
+                "Origin": "https://h5.m.taobao.com",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "X-API-Key,Content-Type",
+            },
+        )
+        assert response.status_code == 200
+        assert response.headers.get("access-control-allow-origin") == "https://h5.m.taobao.com"
+
+    def test_allows_tmall_origin(self, client):
+        """允许来自 *.tmall.com 的跨域请求"""
+        response = client.options(
+            "/qa/chat",
+            headers={
+                "Origin": "https://h5.m.tmall.com",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "X-API-Key,Content-Type",
+            },
+        )
+        assert response.status_code == 200
+
+    def test_blocks_unknown_origin(self, client):
+        """拒绝未知来源的跨域请求"""
+        response = client.options(
+            "/qa/chat",
+            headers={
+                "Origin": "https://evil.com",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "X-API-Key,Content-Type",
+            },
+        )
+        assert response.status_code != 200
+        assert response.headers.get("access-control-allow-origin") is None

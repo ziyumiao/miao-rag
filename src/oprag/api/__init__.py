@@ -6,6 +6,7 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from oprag.agent.graph import create_agent
@@ -47,6 +48,19 @@ def create_api(api_key: str = "") -> FastAPI:
 
     if api_key:
         app.add_middleware(ApiKeyMiddleware, api_key=api_key)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "https://h5.m.taobao.com",
+            "https://h5.m.tmall.com",
+            "https://*.taobao.com",
+            "https://*.tmall.com",
+        ],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["X-API-Key", "Content-Type", "Authorization"],
+    )
 
     @app.get("/health")
     async def health():
