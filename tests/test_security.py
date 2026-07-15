@@ -144,3 +144,36 @@ class TestRateLimit:
             )
         # 至少有一个返回 429
         assert any(r.status_code == 429 for r in responses)
+
+
+class TestPromptTemplate:
+    def test_template_has_separators(self):
+        """RCTRF 模板应包含分层分隔符"""
+        from oprag.tools.prompt_template import build_prompt
+
+        prompt = build_prompt("测试消息", "测试上下文")
+        assert "-------- SYSTEM --------" in prompt
+        assert "-------- USER --------" in prompt
+        assert "-------- ASSISTANT --------" in prompt
+
+    def test_template_includes_user_message(self):
+        """模板应包含用户消息"""
+        from oprag.tools.prompt_template import build_prompt
+
+        prompt = build_prompt("海盗船K70兼容性", "上下文")
+        assert "海盗船K70兼容性" in prompt
+
+    def test_template_includes_context(self):
+        """模板应包含知识库上下文"""
+        from oprag.tools.prompt_template import build_prompt
+
+        prompt = build_prompt("测试", "知识库：MX轴兼容")
+        assert "知识库：MX轴兼容" in prompt
+
+    def test_template_has_structured_format(self):
+        """模板应包含强制 JSON 输出格式"""
+        from oprag.tools.prompt_template import build_prompt
+
+        prompt = build_prompt("测试", "上下文")
+        assert '"sentiment_response"' in prompt
+        assert '"answer"' in prompt
