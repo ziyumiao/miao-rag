@@ -139,8 +139,11 @@
 
 - [ ] 实现并行意图识别节点
   - 情感分析（正面/负面/中性）
-  - 业务意图提取（compatibility_check / product_inquiry / after_sales）
+  - 业务意图提取（compatibility_check / product_inquiry / after_sales / chitchat）
   - 实体提取（键盘型号 / 轴体 / 键帽规格）
+  - **检索必要性判断**：需要商品规格/兼容性/专业术语时 retrieval_needed=true
+  - 凭常识/FAQ 可回答时 retrieval_needed=false + 给出 direct_answer
+  - 闲聊和无检索需求问题直接路由到生成答案节点，节省检索环节
   - 使用 RCTRF prompt 模板（`tools/prompt_template.py`）
 - [ ] 实现情感回应逻辑
   - 感谢赞美、安抚抱怨、中性推进
