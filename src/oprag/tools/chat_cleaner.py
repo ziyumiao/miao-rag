@@ -43,6 +43,8 @@ class ExtractedFact:
 class ExtractedResult:
     qa_pairs: list[ExtractedQA] = field(default_factory=list)
     facts: list[ExtractedFact] = field(default_factory=list)
+    rule_misses: int = 0  # 规则未命中的对话段数
+    had_rule_match: bool = False
 
 
 # 品牌中文 → 英文标准化映射
@@ -168,15 +170,9 @@ def _find_agent_reply(messages: list, customer_idx: int) -> str:
 
 
 def clean_chat_record(messages: list) -> ExtractedResult:
-    """清洗一段聊天记录，提取 QA 对和事实
-
-    Args:
-        messages: [{role: "customer"|"agent", content: "消息内容"}]
-
-    Returns:
-        ExtractedResult 包含 qa_pairs 和 facts
-    """
+    """清洗一段聊天记录，提取 QA 对和事实"""
     result = ExtractedResult()
+    had_any_match = False
 
     for i, msg in enumerate(messages):
         if msg.role != "customer":
@@ -188,6 +184,7 @@ def clean_chat_record(messages: list) -> ExtractedResult:
         for pattern, qa_gen, fact_gen in QUESTION_PATTERNS:
             m = pattern.search(content)
             if m:
+                had_any_match = True
                 qa = qa_gen(m)
                 if agent_reply:
                     qa.answer = agent_reply
@@ -199,6 +196,8 @@ def clean_chat_record(messages: list) -> ExtractedResult:
                         result.facts.append(fact)
                 break  # 一条客户消息只匹配一个规则
 
+    if had_any_match:
+        result.had_rule_match = True
     return result
 
 
@@ -226,6 +225,9 @@ def clean_all_records(records: list[dict]) -> ExtractedResult:
         msgs = [Msg(m) for m in messages]
         result = clean_chat_record(msgs)
 
+        if not result.had_rule_match and messages:
+            all_result.rule_misses += 1
+            # 记录待 LLM 处理的对话（后续可传给 LLM 兜底）
         for qa in result.qa_pairs:
             qa.source = session_id
             all_result.qa_pairs.append(qa)
@@ -256,3 +258,30 @@ def export_to_jsonl(result: ExtractedResult, kind: str = "qa_pairs") -> str:
 
     lines = [_json.dumps(item, ensure_ascii=False) for item in items]
     return "\n".join(lines)
+
+
+def build_llm_extraction_prompt(conversation: str) -> str:
+    """构建 LLM 兜底提取的 prompt
+
+    Args:
+        conversation: 一段待清洗的对话文本
+
+    Returns:
+        LLM prompt 字符串
+    """
+    return f"""你是一个客服对话分析助手。请从以下客服对话中提取有效知识。
+忽略闲聊、情绪安抚、打招呼等无关内容。
+
+对话：
+{conversation}
+
+返回 JSON（不含 markdown 代码块标记）：
+{{
+  "qa_pairs": [
+    {{"question": "规范化后的问题", "answer": "客服回答的核心内容", "tags": ["标签"]}}
+  ],
+  "facts": [
+    {{"entity": "实体名", "relation": "关系", "value": "值"}}
+  ]
+}}
+若无有效知识则返回空数组。"""

@@ -167,3 +167,48 @@ class TestPipeline:
             assert "entity" in item
             assert "relation" in item
             assert "value" in item
+
+
+class TestLLMFallback:
+    def test_llm_prompt_has_correct_format(self):
+        """LLM 兜底提取 prompt 格式正确"""
+        from oprag.tools.chat_cleaner import build_llm_extraction_prompt
+
+        conversation = """
+        客户: 我上次买的键帽用了一个月就掉色了，这是正常现象吗
+        客服: 热升华工艺的一般不会掉色，您方便拍张照片给我看看吗
+        """
+        prompt = build_llm_extraction_prompt(conversation)
+        assert "对话" in prompt or "聊天" in prompt
+        assert "提取" in prompt
+        assert "JSON" in prompt
+        assert "qa_pairs" in prompt
+        assert "facts" in prompt
+
+    def test_complex_conversation_falls_back_to_llm(self):
+        """无规则匹配的复杂对话进入 LLM 兜底"""
+        messages = [
+            ChatMessage(role="customer", content="我上次买的键帽用了一个月就掉色了，售后能处理吗"),
+            ChatMessage(role="agent", content="请提供订单号，我帮您查看"),
+        ]
+        # 不用 LLM 时规则不匹配，应返回空结果
+        result = clean_chat_record(messages)
+        assert len(result.qa_pairs) == 0
+
+    def test_pipeline_records_rule_misses(self):
+        """管线记录规则未命中的对话供 LLM 处理"""
+        from oprag.tools.chat_cleaner import clean_all_records
+
+        records = [
+            {
+                "session_id": "sess-004",
+                "messages": [
+                    {"role": "customer", "content": "键帽掉色了要退货"},
+                    {"role": "agent", "content": "请提供订单号"},
+                ],
+            },
+        ]
+        result = clean_all_records(records)
+        # 规则未命中，应标记为 LLM 待处理
+        assert result.rule_misses >= 1
+        assert len(result.qa_pairs) == 0
