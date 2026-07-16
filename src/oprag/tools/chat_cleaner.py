@@ -112,6 +112,16 @@ QUESTION_PATTERNS = [
         ),
         lambda m, agent_reply: None,
     ),
+    # 安装/使用问题
+    (
+        re.compile(r"(?P<description>.+?)(?:怎么装|怎么换|有点松|太紧|装不上|按不进去|怎么办)"),
+        lambda m: ExtractedQA(
+            question=f"{m['description']}",
+            answer="",
+            tags=["使用咨询", m["description"]],
+        ),
+        lambda m, agent_reply: None,
+    ),
 ]
 
 # 客服回复中的信息提取
@@ -190,3 +200,59 @@ def clean_chat_record(messages: list) -> ExtractedResult:
                 break  # 一条客户消息只匹配一个规则
 
     return result
+
+
+def clean_all_records(records: list[dict]) -> ExtractedResult:
+    """批量清洗多条聊天记录
+
+    Args:
+        records: [{session_id: str, messages: [{role, content}]}]
+
+    Returns:
+        合并的 ExtractedResult
+    """
+    all_result = ExtractedResult()
+
+    for record in records:
+        session_id = record.get("session_id", "")
+        messages = record.get("messages", [])
+
+        # 转换 dict → ChatMessage-like 对象
+        class Msg:
+            def __init__(self, d):
+                self.role = d.get("role", "")
+                self.content = d.get("content", "")
+
+        msgs = [Msg(m) for m in messages]
+        result = clean_chat_record(msgs)
+
+        for qa in result.qa_pairs:
+            qa.source = session_id
+            all_result.qa_pairs.append(qa)
+        for fact in result.facts:
+            fact.source = session_id
+            all_result.facts.append(fact)
+
+    return all_result
+
+
+def export_to_jsonl(result: ExtractedResult, kind: str = "qa_pairs") -> str:
+    """将提取结果导出为 JSONL 字符串
+
+    Args:
+        result: 清洗结果
+        kind: "qa_pairs" 或 "facts"
+
+    Returns:
+        JSONL 格式字符串
+    """
+    import json as _json
+    from dataclasses import asdict
+
+    if kind == "qa_pairs":
+        items = [asdict(qa) for qa in result.qa_pairs]
+    else:
+        items = [asdict(f) for f in result.facts]
+
+    lines = [_json.dumps(item, ensure_ascii=False) for item in items]
+    return "\n".join(lines)
