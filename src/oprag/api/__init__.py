@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from oprag.agent.graph import create_agent
 from oprag.api.middleware import ApiKeyMiddleware, RateLimitMiddleware
+from oprag.config import settings
 
 
 class ChatRequest(BaseModel):
@@ -36,7 +37,7 @@ def create_api(api_key: str = "") -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         nonlocal _agent
-        _agent = create_agent(use_pg=False)
+        _agent = create_agent()
         app.state.agent = _agent
         yield
 
@@ -62,7 +63,11 @@ def create_api(api_key: str = "") -> FastAPI:
         allow_headers=["X-API-Key", "Content-Type", "Authorization"],
     )
 
-    app.add_middleware(RateLimitMiddleware, session_qps=2)
+    app.add_middleware(
+        RateLimitMiddleware,
+        session_qps=settings.session_qps,
+        global_qps=settings.global_qps,
+    )
 
     @app.get("/health")
     async def health():

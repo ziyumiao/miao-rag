@@ -36,33 +36,45 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, session_qps: int = 2):
+    def __init__(self, app, session_qps: int = 2, global_qps: int = 10):
         super().__init__(app)
         self._session_qps = session_qps
-        # {session_id: [(timestamp, ...)]}
+        self._global_qps = global_qps
+        self._global_requests: list[float] = []
         self._session_requests: dict[str, list[float]] = defaultdict(list)
-        # 定期清理过期记录
         self._last_cleanup = time.monotonic()
 
     async def dispatch(self, request: Request, call_next):
         now = time.monotonic()
 
-        # 每 60 秒清理一次过期记录
         if now - self._last_cleanup > 60:
             self._cleanup(now)
             self._last_cleanup = now
 
-        session_id = request.headers.get("X-Session-Id") or "default"
+        # 全局 QPS 检查
+        self._global_requests = [t for t in self._global_requests if now - t < 1.0]
+        self._global_requests.append(now)
+        global_remaining = self._global_qps - len(self._global_requests)
+        if global_remaining < 0:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "服务繁忙，请稍后再试"},
+                headers={
+                    "X-RateLimit-Limit": str(self._global_qps),
+                    "X-RateLimit-Remaining": "0",
+                    "Retry-After": "1",
+                },
+            )
 
-        # 检查 session 限流（滑动窗口 1 秒）
+        # session 限流检查
+        session_id = request.headers.get("X-Session-Id") or "default"
         self._session_requests[session_id] = [
             t for t in self._session_requests[session_id] if now - t < 1.0
         ]
         self._session_requests[session_id].append(now)
+        session_remaining = self._session_qps - len(self._session_requests[session_id])
 
-        remaining = self._session_qps - len(self._session_requests[session_id])
-
-        if remaining < 0:
+        if session_remaining < 0:
             return JSONResponse(
                 status_code=429,
                 content={"detail": "请求过于频繁，请稍后再试"},
@@ -75,10 +87,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         response = await call_next(request)
         response.headers["X-RateLimit-Limit"] = str(self._session_qps)
-        response.headers["X-RateLimit-Remaining"] = str(max(0, remaining))
+        response.headers["X-RateLimit-Remaining"] = str(max(0, session_remaining))
         return response
 
     def _cleanup(self, now: float):
+        self._global_requests = [t for t in self._global_requests if now - t < 1.0]
         expired = [s for s, times in self._session_requests.items() if all(now - t > 1.0 for t in times)]
         for session_id in expired:
             del self._session_requests[session_id]

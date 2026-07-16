@@ -13,17 +13,17 @@ class Settings(BaseSettings):
     )
 
     # --- LLM 文本 ---
-    llm_api_key: str = "sk-"
+    llm_api_key: str = ""
     llm_base_url: str = "https://api.deepseek.com"
     llm_model: str = "deepseek-v4-flash"
 
     # --- LLM 多模态（轴体图片识别）---
-    vision_api_key: str = "sk-"
+    vision_api_key: str = ""
     vision_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     vision_model: str = "qwen-vl-max"
 
     # --- Embedding ---
-    embedding_api_key: str = "sk-"
+    embedding_api_key: str = ""
     embedding_base_url: str = "https://api.openai.com/v1"
     embedding_model: str = "text-embedding-3-small"
 

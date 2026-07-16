@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import logging
+
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 
 from oprag.agent.state import AgentState
 from oprag.agent.nodes import intent_recognition, retrieve, generate_answer, escalate
+from oprag.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 def _route_after_intent(state: AgentState) -> str:
@@ -58,17 +63,22 @@ def build_graph() -> StateGraph:
     return builder
 
 
-def create_agent(use_pg: bool = False):
+def create_agent(use_pg: bool | None = None):
     graph = build_graph()
+    if use_pg is None:
+        use_pg = bool(settings.pg_connection_string and "postgresql" in settings.pg_connection_string)
+
     if use_pg:
         try:
             from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-            from oprag.config import settings
 
             checkpointer = AsyncPostgresSaver.from_conn_string(
                 settings.pg_connection_string
             )
             return graph.compile(checkpointer=checkpointer)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "PG checkpointer 连接失败，降级为 MemorySaver（会话重启后丢失）: %s",
+                exc,
+            )
     return graph.compile(checkpointer=MemorySaver())
