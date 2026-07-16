@@ -240,4 +240,10 @@ P0.5 依赖 P0（需要 API 框架才能加中间件）。P1 和 P2 可以并行
   - `data/faq.md` — 10 条 FAQ（安装/清洗/退换/松动/透光/矮轴/磁轴/赠品等）
   - `data/keyboard_db.json` — 30 个高频键盘型号映射库
   - `data/dict.txt` — jieba 自定义词典（键帽行业术语，P3 使用）
-- [ ] P2 清洗流水线
+- [x] P2 清洗流水线 ✅
+  - `tools/chat_cleaner.py`：规则引擎（7组句式）+ 品牌别名映射（11组）
+  - 客服回复轴体信息提取 → 事实三元组
+  - `clean_all_records()` 批量清洗 + `export_to_jsonl()` JSONL 导出
+  - `build_llm_extraction_prompt()` LLM 兜底 prompt
+  - LLM 实际调用等有真实聊天记录后执行
+- [ ] P3 索引构建（下一步）
