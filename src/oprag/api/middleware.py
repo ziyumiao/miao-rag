@@ -47,14 +47,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         now = time.monotonic()
 
+        if request.url.path in EXCLUDED_PATHS:
+            return await call_next(request)
+
         if now - self._last_cleanup > 60:
             self._cleanup(now)
             self._last_cleanup = now
 
         # 全局 QPS 检查
         self._global_requests = [t for t in self._global_requests if now - t < 1.0]
-        self._global_requests.append(now)
-        global_remaining = self._global_qps - len(self._global_requests)
+        global_remaining = self._global_qps - len(self._global_requests) - 1
         if global_remaining < 0:
             return JSONResponse(
                 status_code=429,
@@ -65,6 +67,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     "Retry-After": "1",
                 },
             )
+        self._global_requests.append(now)
 
         # session 限流检查
         session_id = request.headers.get("X-Session-Id") or "default"
