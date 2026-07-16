@@ -144,6 +144,7 @@
   - **检索必要性判断**：需要商品规格/兼容性/专业术语时 retrieval_needed=true
   - 凭常识/FAQ 可回答时 retrieval_needed=false + 给出 direct_answer
   - 闲聊和无检索需求问题直接路由到生成答案节点，节省检索环节
+  - **合并到 RCTRF 一次调用**：prompt 同时输出 intent + retrieval_needed + entities + direct_answer
   - 使用 RCTRF prompt 模板（`tools/prompt_template.py`）
 - [ ] 实现情感回应逻辑
   - 感谢赞美、安抚抱怨、中性推进
@@ -158,8 +159,11 @@
   - 追问话术生成
 - [ ] 实现生成答案节点
   - RCTRF prompt 模板 + 结构化 JSON 输出
+  - 一次 LLM 调用同时输出 answer + confidence + evaluation（solved/partial/unsolved）
   - 上下文拼接 + LLM 生成
   - 产品推荐生成
+  - 事实性校验：对比检索结果来源，无源信息标记低置信度
+  - 流式 SSE 推送（首字延迟 < 1.5s）
 - [ ] Prompt 效果评估
   - 用 20 个测试用例验证 RCTRF 防注入效果
   - 评估是否需要增加输出检测节点（扫描生成答案中的敏感信息泄露）
