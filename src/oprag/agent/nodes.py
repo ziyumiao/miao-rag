@@ -6,13 +6,15 @@ from oprag.agent.state import AgentState
 
 
 async def intent_recognition(state: AgentState) -> dict:
-    """P0 占位：意图识别节点"""
+    """P0 占位：意图识别节点
+    TODO P4: 并行输出 sentiment + intent + entities + retrieval_needed + direct_answer
+    TODO P4: ask_count 应由追问节点递增，此节点不修改 */
+    """
     return {
         "intent": "unknown",
         "sentiment": "neutral",
         "pending_business": [],
         "missing_info": [],
-        "ask_count": state.get("ask_count", 0) + 1,
     }
 
 

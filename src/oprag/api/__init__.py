@@ -32,13 +32,9 @@ class ChatResponse(BaseModel):
 def create_api(api_key: str = "") -> FastAPI:
     """工厂函数：创建带安全中间件的 FastAPI 应用"""
 
-    _agent = None
-
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        nonlocal _agent
-        _agent = create_agent()
-        app.state.agent = _agent
+        app.state.agent = create_agent()
         yield
 
     app = FastAPI(
@@ -75,7 +71,7 @@ def create_api(api_key: str = "") -> FastAPI:
 
     @app.post("/qa/chat", response_model=ChatResponse)
     async def chat(req: ChatRequest, request: Request):
-        agent = _agent or getattr(request.app.state, "agent", None)
+        agent = getattr(request.app.state, "agent", None)
         if agent is None:
             raise HTTPException(status_code=503, detail="服务尚未初始化")
 

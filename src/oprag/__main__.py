@@ -7,15 +7,10 @@ import uvicorn
 
 from oprag.config import settings
 
-_app = None
-
 
 def get_app():
-    global _app
-    if _app is None:
-        from oprag.api import create_api
-        _app = create_api(api_key=settings.api_key)
-    return _app
+    from oprag.api import create_api
+    return create_api(api_key=settings.api_key)
 
 
 if __name__ == "__main__":

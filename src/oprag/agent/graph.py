@@ -15,13 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 def _route_after_intent(state: AgentState) -> str:
+    # TODO P4: 扩展为三分路由 — direct_answer / retrieve / escalate
     if state.get("escalate"):
         return "escalate"
     return "retrieve"
-
-
-def _route_after_retrieve(state: AgentState) -> str:
-    return "generate_answer"
 
 
 def _route_after_generate(state: AgentState) -> str:
@@ -46,11 +43,8 @@ def build_graph() -> StateGraph:
         {"retrieve": "retrieve", "escalate": "escalate"},
     )
 
-    builder.add_conditional_edges(
-        "retrieve",
-        _route_after_retrieve,
-        {"generate_answer": "generate_answer"},
-    )
+    # P0 阶段常量路由，P4 引入检索质量判断后改为 conditional_edges
+    builder.add_edge("retrieve", "generate_answer")
 
     builder.add_conditional_edges(
         "generate_answer",

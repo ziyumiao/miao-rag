@@ -6,5 +6,6 @@ build/
 .venv/
 .env
 data/chroma/
+.pytest_cache/
 *.pkl
 .DS_Store

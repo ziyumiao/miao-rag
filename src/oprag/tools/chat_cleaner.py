@@ -126,16 +126,23 @@ QUESTION_PATTERNS = [
     ),
 ]
 
-# 客服回复中的信息提取
+# 客服回复中的轴体信息提取
 AGENT_SWITCH_PATTERN = re.compile(
-    r"(?:用的是|使用的是|搭载的是|采用|是|用)[\s的]*(?P<switch>.+?)(?:轴)",
+    r"(?:用的是|使用的是|搭载的是|采用|是|用)[\s的]*(?P<switch>.+?)轴",
 )
-AGENT_COMPAT_POSITIVE = re.compile(
-    r"(?:可以的|没问题|能用的|兼容|支持|适配|可以的|能用)",
-)
-AGENT_COMPAT_NEGATIVE = re.compile(
-    r"(?:不行|不能|不兼容|不支持|不适用|装不了)",
-)
+
+
+class _ChatMsg:
+    """聊天消息，兼容 dict 和对象访问"""
+    __slots__ = ("role", "content")
+
+    def __init__(self, d: dict | object):
+        if isinstance(d, dict):
+            self.role = d.get("role", "")
+            self.content = d.get("content", "")
+        else:
+            self.role = getattr(d, "role", "")
+            self.content = getattr(d, "content", "")
 
 
 def _normalize_model(model_str: str) -> str:
@@ -152,7 +159,7 @@ def _extract_switch_fact(model_str: str, agent_reply: str) -> ExtractedFact | No
     entity = _normalize_model(model_str)
     match = AGENT_SWITCH_PATTERN.search(agent_reply)
     if match:
-        switch_val = match.group("switch").rstrip("轴").strip()
+        switch_val = match.group("switch").strip()
         return ExtractedFact(
             entity=entity,
             relation="uses_switch",
@@ -216,13 +223,7 @@ def clean_all_records(records: list[dict]) -> ExtractedResult:
         session_id = record.get("session_id", "")
         messages = record.get("messages", [])
 
-        # 转换 dict → ChatMessage-like 对象
-        class Msg:
-            def __init__(self, d):
-                self.role = d.get("role", "")
-                self.content = d.get("content", "")
-
-        msgs = [Msg(m) for m in messages]
+        msgs = [_ChatMsg(m) for m in messages]
         result = clean_chat_record(msgs)
 
         if not result.had_rule_match and messages:
